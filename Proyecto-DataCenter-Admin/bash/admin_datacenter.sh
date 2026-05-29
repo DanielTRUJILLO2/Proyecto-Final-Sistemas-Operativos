@@ -105,6 +105,48 @@ mostrar_archivos_grandes() {
     pausar
 }
 
+mostrar_memoria_swap() {
+    clear
+    echo "=============================================="
+    echo " MEMORIA LIBRE Y SWAP EN USO"
+    echo "=============================================="
+    echo ""
+
+    if [ ! -r /proc/meminfo ]; then
+        echo "Error: no se pudo leer la informacion de memoria del sistema."
+        pausar
+        return
+    fi
+
+    memoria_libre_kb=$(grep "MemAvailable" /proc/meminfo | awk '{print $2}')
+
+    if [ -z "$memoria_libre_kb" ]; then
+        memoria_libre_kb=$(grep "MemFree" /proc/meminfo | awk '{print $2}')
+    fi
+
+    swap_total_kb=$(grep "SwapTotal" /proc/meminfo | awk '{print $2}')
+    swap_libre_kb=$(grep "SwapFree" /proc/meminfo | awk '{print $2}')
+
+    memoria_libre_bytes=$((memoria_libre_kb * 1024))
+    swap_total_bytes=$((swap_total_kb * 1024))
+    swap_libre_bytes=$((swap_libre_kb * 1024))
+    swap_usado_bytes=$((swap_total_bytes - swap_libre_bytes))
+
+    if [ "$swap_total_bytes" -gt 0 ]; then
+        porcentaje_swap=$(awk "BEGIN {printf \"%.2f\", ($swap_usado_bytes / $swap_total_bytes) * 100}")
+    else
+        porcentaje_swap="0.00"
+    fi
+
+    echo "Memoria libre: $memoria_libre_bytes bytes"
+    echo ""
+    echo "Swap total: $swap_total_bytes bytes"
+    echo "Swap en uso: $swap_usado_bytes bytes"
+    echo "Porcentaje de swap en uso: $porcentaje_swap %"
+
+    pausar
+}
+
 opcion=""
 
 while [ "$opcion" != "6" ]; do
@@ -125,9 +167,7 @@ while [ "$opcion" != "6" ]; do
             ;;
 
         4)
-            clear
-            echo "Opcion 4 en construccion..."
-            pausar
+            mostrar_memoria_swap
             ;;
 
         5)
