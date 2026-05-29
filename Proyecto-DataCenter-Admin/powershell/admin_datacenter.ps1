@@ -74,6 +74,54 @@ function Mostrar-Discos {
     Pausar
 }
 
+function Mostrar-ArchivosGrandes {
+    Clear-Host
+    Write-Host "=============================================="
+    Write-Host " 10 ARCHIVOS MAS GRANDES"
+    Write-Host "=============================================="
+    Write-Host ""
+
+    $ruta = Read-Host "Ingrese la ruta o disco a analizar. Ejemplo: C:\ o C:\Users"
+
+    if (-not (Test-Path $ruta)) {
+        Write-Host ""
+        Write-Host "Error: la ruta ingresada no existe."
+        Pausar
+        return
+    }
+
+    Write-Host ""
+    Write-Host "Buscando archivos grandes..."
+    Write-Host "Esto puede tardar dependiendo del tamaño de la ruta."
+    Write-Host ""
+
+    try {
+        $archivos = Get-ChildItem -Path $ruta -Recurse -File -ErrorAction SilentlyContinue |
+                    Sort-Object Length -Descending |
+                    Select-Object -First 10 FullName, Length
+
+        if ($archivos.Count -eq 0) {
+            Write-Host "No se encontraron archivos en la ruta especificada."
+        }
+        else {
+            Write-Host "Los 10 archivos mas grandes encontrados son:"
+            Write-Host "----------------------------------------------"
+
+            foreach ($archivo in $archivos) {
+                Write-Host "Archivo: $($archivo.FullName)"
+                Write-Host "Tamano: $($archivo.Length) bytes"
+                Write-Host "----------------------------------------------"
+            }
+        }
+    }
+    catch {
+        Write-Host "Error al buscar los archivos."
+        Write-Host "Detalle: $_"
+    }
+
+    Pausar
+}
+
 function Mostrar-Menu {
     Clear-Host
     Write-Host "=============================================="
@@ -102,9 +150,7 @@ do {
         }
 
         "3" {
-            Clear-Host
-            Write-Host "Opcion 3 en construccion..."
-            Pausar
+            Mostrar-ArchivosGrandes
         }
 
         "4" {
