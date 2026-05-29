@@ -181,6 +181,93 @@ function Mostrar-MemoriaSwap {
     Pausar
 }
 
+function Hacer-Backup {
+    Clear-Host
+    Write-Host "=============================================="
+    Write-Host " BACKUP DE DIRECTORIO A USB"
+    Write-Host "=============================================="
+    Write-Host ""
+
+    $origen = Read-Host "Ingrese la ruta del directorio que desea respaldar"
+
+    if (-not (Test-Path $origen)) {
+        Write-Host ""
+        Write-Host "Error: el directorio de origen no existe."
+        Pausar
+        return
+    }
+
+    if (-not (Test-Path $origen -PathType Container)) {
+        Write-Host ""
+        Write-Host "Error: la ruta de origen no es un directorio."
+        Pausar
+        return
+    }
+
+    Write-Host ""
+    Write-Host "Unidades removibles detectadas:"
+    Write-Host "----------------------------------------------"
+
+    $usbDetectadas = Get-CimInstance Win32_LogicalDisk | Where-Object { $_.DriveType -eq 2 }
+
+    if ($usbDetectadas.Count -eq 0) {
+        Write-Host "No se detectaron memorias USB."
+        Write-Host "Puede ingresar manualmente una ruta destino para pruebas."
+    }
+    else {
+        foreach ($usb in $usbDetectadas) {
+            Write-Host "Unidad USB: $($usb.DeviceID) - Espacio libre: $($usb.FreeSpace) bytes"
+        }
+    }
+
+    Write-Host ""
+    $destinoBase = Read-Host "Ingrese la ruta destino del backup. Ejemplo: E:\ o C:\Users\danny\Documents\PruebaBackup"
+
+    if (-not (Test-Path $destinoBase)) {
+        Write-Host ""
+        Write-Host "La ruta destino no existe. Creandola..."
+        New-Item -Path $destinoBase -ItemType Directory -Force | Out-Null
+    }
+
+    $fecha = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+    $nombreOrigen = Split-Path $origen -Leaf
+
+    if ([string]::IsNullOrWhiteSpace($nombreOrigen)) {
+        $nombreOrigen = "Directorio"
+    }
+
+    $carpetaBackup = Join-Path $destinoBase "backup_${nombreOrigen}_$fecha"
+
+    try {
+        New-Item -Path $carpetaBackup -ItemType Directory -Force | Out-Null
+
+        Write-Host ""
+        Write-Host "Copiando archivos..."
+        Write-Host "Origen: $origen"
+        Write-Host "Destino: $carpetaBackup"
+        Write-Host ""
+
+        Copy-Item -Path $origen\* -Destination $carpetaBackup -Recurse -Force -ErrorAction Stop
+
+        $catalogo = Join-Path $carpetaBackup "catalogo_backup.csv"
+
+        Get-ChildItem -Path $origen -Recurse -File |
+        Select-Object FullName, LastWriteTime |
+        Export-Csv -Path $catalogo -NoTypeInformation -Encoding UTF8
+
+        Write-Host "Backup realizado correctamente."
+        Write-Host "Carpeta del backup: $carpetaBackup"
+        Write-Host "Catalogo generado: $catalogo"
+    }
+    catch {
+        Write-Host ""
+        Write-Host "Error al realizar el backup."
+        Write-Host "Detalle: $_"
+    }
+
+    Pausar
+}
+
 function Mostrar-Menu {
     Clear-Host
     Write-Host "=============================================="
@@ -217,9 +304,7 @@ do {
         }
 
         "5" {
-            Clear-Host
-            Write-Host "Opcion 5 en construccion..."
-            Pausar
+            Hacer-Backup
         }
 
         "6" {
