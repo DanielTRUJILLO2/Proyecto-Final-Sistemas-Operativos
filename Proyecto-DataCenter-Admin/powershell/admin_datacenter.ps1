@@ -122,6 +122,65 @@ function Mostrar-ArchivosGrandes {
     Pausar
 }
 
+function Mostrar-MemoriaSwap {
+    Clear-Host
+    Write-Host "=============================================="
+    Write-Host " MEMORIA LIBRE Y SWAP EN USO"
+    Write-Host "=============================================="
+    Write-Host ""
+
+    try {
+        # Obtener informacion de memoria fisica
+        $sistema = Get-CimInstance Win32_OperatingSystem
+
+        # FreePhysicalMemory viene en KB, se convierte a bytes
+        $memoriaLibreBytes = [int64]$sistema.FreePhysicalMemory * 1024
+        $memoriaTotalBytes = [int64]$sistema.TotalVisibleMemorySize * 1024
+
+        Write-Host "Memoria fisica total: $memoriaTotalBytes bytes"
+        Write-Host "Memoria fisica libre: $memoriaLibreBytes bytes"
+        Write-Host ""
+
+        # Obtener informacion del archivo de paginacion
+        # En Windows, el archivo de paginacion cumple una funcion similar al swap
+        $pagefiles = Get-CimInstance Win32_PageFileUsage
+
+        if ($null -eq $pagefiles) {
+            Write-Host "No se encontro informacion del archivo de paginacion."
+        }
+        else {
+            $swapTotalMB = 0
+            $swapUsadoMB = 0
+
+            foreach ($pagefile in $pagefiles) {
+                $swapTotalMB += $pagefile.AllocatedBaseSize
+                $swapUsadoMB += $pagefile.CurrentUsage
+            }
+
+            # Convertir MB a bytes
+            $swapTotalBytes = [int64]$swapTotalMB * 1024 * 1024
+            $swapUsadoBytes = [int64]$swapUsadoMB * 1024 * 1024
+
+            if ($swapTotalBytes -gt 0) {
+                $porcentajeSwap = [math]::Round(($swapUsadoBytes / $swapTotalBytes) * 100, 2)
+            }
+            else {
+                $porcentajeSwap = 0
+            }
+
+            Write-Host "Swap/Pagefile total: $swapTotalBytes bytes"
+            Write-Host "Swap/Pagefile en uso: $swapUsadoBytes bytes"
+            Write-Host "Porcentaje de swap/pagefile en uso: $porcentajeSwap %"
+        }
+    }
+    catch {
+        Write-Host "Error al obtener informacion de memoria y swap."
+        Write-Host "Detalle: $_"
+    }
+
+    Pausar
+}
+
 function Mostrar-Menu {
     Clear-Host
     Write-Host "=============================================="
@@ -154,9 +213,7 @@ do {
         }
 
         "4" {
-            Clear-Host
-            Write-Host "Opcion 4 en construccion..."
-            Pausar
+            Mostrar-MemoriaSwap
         }
 
         "5" {
