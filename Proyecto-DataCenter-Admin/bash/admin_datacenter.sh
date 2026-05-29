@@ -59,6 +59,52 @@ mostrar_discos() {
     pausar
 }
 
+mostrar_archivos_grandes() {
+    clear
+    echo "=============================================="
+    echo " 10 ARCHIVOS MAS GRANDES"
+    echo "=============================================="
+    echo ""
+
+    read -p "Ingrese la ruta o filesystem a analizar: " ruta
+
+    if [ ! -e "$ruta" ]; then
+        echo ""
+        echo "Error: la ruta ingresada no existe."
+        pausar
+        return
+    fi
+
+    if [ ! -d "$ruta" ]; then
+        echo ""
+        echo "Error: la ruta ingresada no es un directorio."
+        pausar
+        return
+    fi
+
+    echo ""
+    echo "Buscando archivos grandes..."
+    echo "Esto puede tardar dependiendo del tamano de la ruta."
+    echo ""
+
+    archivos=$(find "$ruta" -type f -printf "%s|%p\n" 2>/dev/null | sort -nr | head -10)
+
+    if [ -z "$archivos" ]; then
+        echo "No se encontraron archivos en la ruta especificada."
+    else
+        echo "Los 10 archivos mas grandes encontrados son:"
+        echo "----------------------------------------------"
+
+        echo "$archivos" | while IFS="|" read -r tamano archivo; do
+            echo "Archivo: $archivo"
+            echo "Tamano: $tamano bytes"
+            echo "----------------------------------------------"
+        done
+    fi
+
+    pausar
+}
+
 opcion=""
 
 while [ "$opcion" != "6" ]; do
@@ -75,9 +121,7 @@ while [ "$opcion" != "6" ]; do
             ;;
 
         3)
-            clear
-            echo "Opcion 3 en construccion..."
-            pausar
+            mostrar_archivos_grandes
             ;;
 
         4)
