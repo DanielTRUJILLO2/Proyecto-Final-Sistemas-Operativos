@@ -43,6 +43,22 @@ mostrar_menu() {
     echo "=============================================="
 }
 
+mostrar_discos() {
+    clear
+    echo "=============================================="
+    echo " DISCOS / FILESYSTEMS CONECTADOS"
+    echo "=============================================="
+    echo ""
+
+    if command -v df >/dev/null 2>&1; then
+        df -B1 --output=source,target,size,avail
+    else
+        echo "Error: el comando df no esta disponible en este sistema."
+    fi
+
+    pausar
+}
+
 opcion=""
 
 while [ "$opcion" != "6" ]; do
@@ -55,9 +71,7 @@ while [ "$opcion" != "6" ]; do
             ;;
 
         2)
-            clear
-            echo "Opcion 2 en construccion..."
-            pausar
+            mostrar_discos
             ;;
 
         3)
