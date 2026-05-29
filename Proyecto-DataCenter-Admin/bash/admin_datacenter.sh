@@ -147,6 +147,103 @@ mostrar_memoria_swap() {
     pausar
 }
 
+hacer_backup() {
+    clear
+    echo "=============================================="
+    echo " BACKUP DE DIRECTORIO A USB"
+    echo "=============================================="
+    echo ""
+
+    read -p "Ingrese la ruta del directorio que desea respaldar: " origen
+
+    if [ ! -e "$origen" ]; then
+        echo ""
+        echo "Error: el directorio de origen no existe."
+        pausar
+        return
+    fi
+
+    if [ ! -d "$origen" ]; then
+        echo ""
+        echo "Error: la ruta de origen no es un directorio."
+        pausar
+        return
+    fi
+
+    echo ""
+    echo "Discos o filesystems disponibles:"
+    echo "----------------------------------------------"
+    df -B1 --output=source,target,size,avail
+    echo "----------------------------------------------"
+    echo ""
+
+    read -p "Ingrese la ruta destino del backup: " destino_base
+
+    if [ -z "$destino_base" ]; then
+        echo ""
+        echo "Error: no ingreso una ruta destino."
+        pausar
+        return
+    fi
+
+    if [ ! -d "$destino_base" ]; then
+        echo ""
+        echo "La ruta destino no existe. Creandola..."
+        mkdir -p "$destino_base"
+
+        if [ $? -ne 0 ]; then
+            echo "Error: no se pudo crear la ruta destino."
+            pausar
+            return
+        fi
+    fi
+
+    fecha=$(date +"%Y-%m-%d_%H-%M-%S")
+    nombre_origen=$(basename "$origen")
+
+    if [ -z "$nombre_origen" ] || [ "$nombre_origen" = "/" ]; then
+        nombre_origen="Directorio"
+    fi
+
+    carpeta_backup="$destino_base/backup_${nombre_origen}_$fecha"
+
+    mkdir -p "$carpeta_backup"
+
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "Error: no se pudo crear la carpeta del backup."
+        pausar
+        return
+    fi
+
+    echo ""
+    echo "Copiando archivos..."
+    echo "Origen: $origen"
+    echo "Destino: $carpeta_backup"
+    echo ""
+
+    cp -a "$origen/." "$carpeta_backup/" 2>/dev/null
+
+    if [ $? -ne 0 ]; then
+        echo "Error: ocurrio un problema al copiar los archivos."
+        pausar
+        return
+    fi
+
+    catalogo="$carpeta_backup/catalogo_backup.csv"
+
+    echo "Archivo,UltimaModificacion" > "$catalogo"
+
+    find "$origen" -type f -printf "\"%p\",\"%TY-%Tm-%Td %TH:%TM:%TS\"\n" 2>/dev/null >> "$catalogo"
+
+    echo ""
+    echo "Backup realizado correctamente."
+    echo "Carpeta del backup: $carpeta_backup"
+    echo "Catalogo generado: $catalogo"
+
+    pausar
+}
+
 opcion=""
 
 while [ "$opcion" != "6" ]; do
@@ -171,9 +268,7 @@ while [ "$opcion" != "6" ]; do
             ;;
 
         5)
-            clear
-            echo "Opcion 5 en construccion..."
-            pausar
+            hacer_backup
             ;;
 
         6)
