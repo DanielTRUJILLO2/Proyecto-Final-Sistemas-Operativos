@@ -221,7 +221,7 @@ function Hacer-Backup {
     }
 
     Write-Host ""
-    $destinoBase = Read-Host "Ingrese la ruta destino del backup. Ejemplo: E:\ o C:\Users\danny\Documents\PruebaBackup"
+    $destinoBase = Read-Host "Ingrese la ruta destino del backup: "
 
     if (-not (Test-Path $destinoBase)) {
         Write-Host ""

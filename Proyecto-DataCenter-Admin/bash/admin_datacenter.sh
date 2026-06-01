@@ -222,13 +222,13 @@ hacer_backup() {
     echo "Destino: $carpeta_backup"
     echo ""
 
-    cp -a "$origen/." "$carpeta_backup/" 2>/dev/null
+    rsync -r --no-perms --no-owner --no-group --omit-dir-times "$origen/" "$carpeta_backup/"
 
-    if [ $? -ne 0 ]; then
-        echo "Error: ocurrio un problema al copiar los archivos."
-        pausar
-        return
-    fi
+if [ $? -ne 0 ]; then
+    echo "Error: ocurrio un problema al copiar los archivos."
+    pausar
+    return
+fi
 
     catalogo="$carpeta_backup/catalogo_backup.csv"
 
